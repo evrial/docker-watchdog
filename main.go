@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -17,26 +16,9 @@ import (
 )
 
 var (
-	logFilePath    string
 	restartTimeout int
 	cooldownSec    int
 )
-
-// logEvent writes a timestamped message to the log file.
-func logEvent(message string) {
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Printf("Failed to open log file: %v", err)
-		return
-	}
-	defer file.Close()
-
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
-	logMessage := fmt.Sprintf("[%s] %s\n", timestamp, message)
-	if _, err := file.WriteString(logMessage); err != nil {
-		log.Printf("Failed to write to log file: %v", err)
-	}
-}
 
 // runAppriseCommand executes the apprise command.
 func runAppriseCommand(title, body string) {
@@ -47,10 +29,9 @@ func runAppriseCommand(title, body string) {
 }
 
 func main() {
-	// Config via flags (also override with env vars)
-	flag.StringVar(&logFilePath, "log", getenv("WATCHDOG_LOG", "/var/log/docker-watchdog.log"), "Path to log file")
-	flag.IntVar(&restartTimeout, "timeout", getenvInt("WATCHDOG_TIMEOUT", 10), "Restart timeout in seconds")
-	flag.IntVar(&cooldownSec, "cooldown", getenvInt("WATCHDOG_COOLDOWN", 30), "Cooldown between restarts per container (seconds)")
+	// Config via flags
+	flag.IntVar(&restartTimeout, "timeout", 10, "Restart timeout in seconds")
+	flag.IntVar(&cooldownSec, "cooldown", 30, "Cooldown between restarts per container (seconds)")
 	flag.Parse()
 
 	ctx := context.Background()
@@ -63,7 +44,7 @@ func main() {
 
 	// Send "service started" notification
 	runAppriseCommand("Docker Watchdog", "Service started")
-	logEvent("Service started")
+	log.Printf("Running")
 
 	// Filter for container health status events
 	filters := filters.NewArgs()
@@ -94,7 +75,7 @@ func main() {
 			containerID := event.ID[:12]
 
 			logMessage := fmt.Sprintf("Unhealthy container detected: %s (%s)", containerName, containerID)
-			logEvent(logMessage)
+			log.Printf(logMessage)
 
 			timeoutSec := restartTimeout
 			stopOpts := container.StopOptions{Timeout: &timeoutSec}
@@ -119,21 +100,4 @@ func main() {
 			eventChan, errChan = cli.Events(ctx, types.EventsOptions{Filters: filters})
 		}
 	}
-}
-
-// Helpers for env vars
-func getenv(key, def string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	return def
-}
-
-func getenvInt(key string, def int) int {
-	if val := os.Getenv(key); val != "" {
-		if v, err := fmt.Sscanf(val, "%d", &def); err == nil && v == 1 {
-			return def
-		}
-	}
-	return def
 }
