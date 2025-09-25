@@ -1,6 +1,6 @@
 1. Install: 
 ```sh
-go install codeberg.org/evrial/docker-watchdog@latest
+go install
 ```
 2. Install [uv](https://docs.astral.sh/uv/).
 3. Install [Apprise](https://github.com/caronc/apprise): 

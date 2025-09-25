@@ -1,4 +1,4 @@
-module codeberg.org/evrial/docker-watchdog
+module docker-watchdog
 
 go 1.25.1
 
