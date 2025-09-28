@@ -1,0 +1,19 @@
+[Unit]
+Description=Docker Watchdog
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Environment=PATH=/home/dietpi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/local/bin/docker-watchdog
+User=dietpi
+Restart=always
+RestartSec=2
+Nice=-10
+# Uncomment if you want RT priority (requires permissions)
+#ExecStart=/usr/bin/chrt -f 80 /usr/local/bin/docker-watchdog.sh
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target
