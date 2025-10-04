@@ -41,10 +41,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create Docker client: %v", err)
 	}
+	log.Println("Successfully connected to Docker daemon.")
 
 	// Send "service started" notification
 	runAppriseCommand("Docker Watchdog", "Service started")
-	log.Printf("Running")
 
 	// Filter for container health status events
 	filters := filters.NewArgs()
@@ -96,6 +96,7 @@ func main() {
 			if newErr != nil {
 				log.Fatalf("Failed to re-create Docker client: %v", newErr)
 			}
+			log.Println("Successfully re-established connection to Docker daemon.")
 			cli = newCli
 			eventChan, errChan = cli.Events(ctx, types.EventsOptions{Filters: filters})
 		}
