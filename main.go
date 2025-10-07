@@ -75,7 +75,7 @@ func main() {
 			lastRestart[event.Actor.ID] = time.Now()
 
 			containerName := strings.TrimPrefix(event.Actor.Attributes["name"], "/")
-			containerID := event.ID[:12]
+			containerID := event.Actor.ID[:12]
 
 			logMessage := fmt.Sprintf("Unhealthy container detected: %s (%s)", containerName, containerID)
 			log.Printf(logMessage)
