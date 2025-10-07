@@ -23,8 +23,9 @@ var (
 // sendAppriseMessage executes the apprise command.
 func sendAppriseMessage(body string) {
 	cmd := exec.Command("apprise", "-t", "Docker Watchdog", "-b", body)
-	if err := cmd.Run(); err != nil {
-		log.Printf("Failed to send notification: %v", err)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Failed to send notification: %v. Output: %s", err, out)
 	}
 }
 
@@ -50,12 +51,12 @@ func main() {
 	sendAppriseMessage(logMessage)
 
 	// Filter for container health status events
-	filters := filters.NewArgs()
-	filters.Add("type", "container")
-	filters.Add("event", "health_status")
+	eventFilters := filters.NewArgs()
+	eventFilters.Add("type", "container")
+	eventFilters.Add("event", "health_status")
 
 	// Get the event stream
-	eventChan, errChan := cli.Events(ctx, types.EventsOptions{Filters: filters})
+	eventChan, errChan := cli.Events(ctx, types.EventsOptions{Filters: eventFilters})
 
 	// Track last restart times to avoid rapid loops
 	lastRestart := make(map[string]time.Time)
@@ -103,7 +104,7 @@ func main() {
 			}
 			log.Println("Successfully re-established connection to Docker daemon.")
 			cli = newCli
-			eventChan, errChan = cli.Events(ctx, types.EventsOptions{Filters: filters})
+			eventChan, errChan = cli.Events(ctx, types.EventsOptions{Filters: eventFilters})
 		}
 	}
 }
