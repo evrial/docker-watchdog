@@ -1,6 +1,6 @@
 1. Install: 
 ```sh
-go install
+go build
 ```
 2. Install [uv](https://docs.astral.sh/uv/).
 3. Install [Apprise](https://github.com/caronc/apprise): 

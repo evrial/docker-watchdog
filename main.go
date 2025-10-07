@@ -20,9 +20,9 @@ var (
 	cooldownSec    int
 )
 
-// runAppriseCommand executes the apprise command.
-func runAppriseCommand(title, body string) {
-	cmd := exec.Command("apprise", "-t", title, "-b", body)
+// sendAppriseMessage executes the apprise command.
+func sendAppriseMessage(body string) {
+	cmd := exec.Command("apprise", "-t", "Docker Watchdog", "-b", body)
 	if err := cmd.Run(); err != nil {
 		log.Printf("Failed to send notification: %v", err)
 	}
@@ -39,12 +39,15 @@ func main() {
 	// Create a new Docker client
 	cli, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
 	if err != nil {
-		log.Fatalf("Failed to create Docker client: %v", err)
+		logMessage := fmt.Sprintf("Failed to create Docker client: %v", err)
+		sendAppriseMessage(logMessage)
+		log.Fatalf(logMessage)
 	}
-	log.Println("Successfully connected to Docker daemon.")
+	logMessage := fmt.Sprintf("Successfully connected to Docker daemon.")
+	log.Println(logMessage)
 
-	// Send "service started" notification
-	runAppriseCommand("Docker Watchdog", "Service started")
+	// Send notification
+	sendAppriseMessage(logMessage)
 
 	// Filter for container health status events
 	filters := filters.NewArgs()
@@ -76,17 +79,19 @@ func main() {
 
 			logMessage := fmt.Sprintf("Unhealthy container detected: %s (%s)", containerName, containerID)
 			log.Printf(logMessage)
+			sendAppriseMessage(logMessage)
 
-			timeoutSec := restartTimeout
-			stopOpts := container.StopOptions{Timeout: &timeoutSec}
+			stopOpts := container.StopOptions{Timeout: &restartTimeout}
 
-			log.Printf("Restarting container: %s", containerName)
 			if err := cli.ContainerRestart(ctx, event.Actor.ID, stopOpts); err != nil {
-				log.Printf("Failed to restart container %s: %v", containerName, err)
+				logMessage = fmt.Sprintf("Failed to restart container %s: %v", containerName, err)
+				log.Printf(logMessage)
+				sendAppriseMessage(logMessage)
 			}
 
-			appriseMessage := fmt.Sprintf("Restarted: %s", containerName)
-			runAppriseCommand("Docker Watchdog", appriseMessage)
+			logMessage = fmt.Sprintf("Restarted: %s (%s)", containerName, containerID)
+			log.Printf(logMessage)
+			sendAppriseMessage(logMessage)
 
 		case err := <-errChan:
 			log.Printf("Error from Docker event stream: %v", err)
