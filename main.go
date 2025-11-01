@@ -31,8 +31,8 @@ func sendAppriseMessage(body string) {
 
 func main() {
 	// Config via flags
-	flag.IntVar(&restartTimeout, "timeout", 10, "Restart timeout in seconds")
-	flag.IntVar(&cooldownSec, "cooldown", 30, "Cooldown between restarts per container (seconds)")
+	flag.IntVar(&restartTimeout, "timeout", 10, "Container restart timeout in seconds")
+	flag.IntVar(&cooldownSec, "cooldown", 30, "Pause between restarts per container (seconds)")
 	flag.Parse()
 
 	ctx := context.Background()

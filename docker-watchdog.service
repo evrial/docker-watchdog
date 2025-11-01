@@ -1,6 +1,6 @@
 [Unit]
 Description=Docker Watchdog
-After=network-online.target docker.service
+After=docker.service network-online.target
 Wants=network-online.target
 
 [Service]
@@ -8,7 +8,9 @@ Environment=PATH=/home/dietpi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbi
 ExecStart=/usr/local/bin/docker-watchdog
 User=dietpi
 Restart=always
-RestartSec=2
+RestartSec=5s
+StartLimitIntervalSec=10s
+StartLimitBurst=5
 Nice=-10
 # Uncomment if you want RT priority (requires permissions)
 #ExecStart=/usr/bin/chrt -f 80 /usr/local/bin/docker-watchdog.sh
